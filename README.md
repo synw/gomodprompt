@@ -27,11 +27,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/synw/gomodprompt"
+	modprompt "github.com/synw/gomodprompt"
 )
 
 func main() {
-	tpl, err := modprompt.InitTemplate("vicuna")
+	tpl, err := modprompt.InitTemplate("chatml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,8 +40,6 @@ func main() {
 	fmt.Println(prompt)
 }
 ```
-
-In this example, we're initializing the Vicuna chat template and using it to generate a prompt with the user input "Hello, how are you?".
 
 ## Customization
 
@@ -73,7 +71,7 @@ In this example, we're replacing the system message, adding extra text after the
 Modprompt also supports chat history and image data. You can push turns to the history and include image data in the turns. Here's an example:
 
 ```go
-tpl, err := modprompt.InitTemplate("opencodeinterpreter")
+tpl, err := modprompt.InitTemplate("chatml")
 if err != nil {
 	log.Fatal(err)
 }
