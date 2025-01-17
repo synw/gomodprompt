@@ -6,14 +6,14 @@ A collection of prompt templates for language models
     Easily modify and adapt templates on-the-fly
     Few shots and conversation history support
 
-:books: [Api doc](https://pkg.go.dev/github.com/synw/modprompt)
+:books: [Api doc](https://pkg.go.dev/github.com/synw/gomodprompt)
 
 ## Installation
 
 To use Modprompt, you'll need to install it first. You can do this by running:
 
 ```bash
-go get -u github.com/synw/modprompt
+go get -u github.com/synw/gomodprompt
 ```
 
 ## Usage
@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/synw/modprompt"
+	"github.com/synw/gomodprompt"
 )
 
 func main() {
