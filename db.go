@@ -35,6 +35,30 @@ var templates = `{
     },
     "user": "<|im_start|>user\n{prompt}<|im_end|>"
   },
+  "chatml-tools": {
+    "afterShot": " <|im_end|>\n",
+    "assistant": "<|im_start|>assistant",
+    "id": "chatml",
+    "linebreaks": {
+      "assistant": 1,
+      "system": 1,
+      "user": 1
+    },
+    "name": "ChatMl",
+    "stop": [
+      "<|im_end|>"
+    ],
+    "system": {
+      "message": "You are a helpful assistant with tool calling capabilities. You may call one or more functions to assist with the user query.\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\\n{tools}\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\\n</tool_call>",
+      "schema": "<|im_start|>system\n{system}<|im_end|>"
+    },
+    "tools": {
+      "call": "<tool_call>\n{tool}\n</tool_call>",
+      "def": "{system}",
+      "response": "<|im_start|>user\n<tool_response>\n{tools_response}\n</tool_response><|im_end|>\n"
+    },
+    "user": "<|im_start|>user\n{prompt}<|im_end|>"
+  },
   "codestral": {
     "afterShot": "\n",
     "assistant": " [/INST]",
@@ -131,15 +155,68 @@ var templates = `{
     ],
     "user": "<start_of_turn>user\n{prompt}"
   },
-  "human_response": {
-    "assistant": "### RESPONSE:",
-    "id": "human_response",
+  "granite": {
+    "afterShot": "<|end_of_text|>\n",
+    "assistant": "<|start_of_role|>assistant<|end_of_role|>",
+    "id": "granite",
     "linebreaks": {
-      "assistant": 1,
-      "user": 2
+      "system": 1,
+      "user": 1
     },
-    "name": "Human response",
-    "user": "### HUMAN:\n{prompt}"
+    "name": "Granite",
+    "stop": [
+      "<|end_of_text|>",
+      "<|start_of_role|>"
+    ],
+    "system": {
+      "message": "You are Granite, developed by IBM. You are a helpful AI assistant.",
+      "schema": "<|start_of_role|>system<|end_of_role|>{system}<|end_of_text|>"
+    },
+    "user": "<|start_of_role|>user<|end_of_role|>{prompt}<|end_of_text|>"
+  },
+  "granite-think": {
+    "afterShot": "<|end_of_text|>\n",
+    "assistant": "<|start_of_role|>assistant<|end_of_role|>",
+    "id": "granite-think",
+    "linebreaks": {
+      "system": 1,
+      "user": 1
+    },
+    "name": "Granite think",
+    "stop": [
+      "<|end_of_text|>",
+      "<|start_of_role|>"
+    ],
+    "system": {
+      "message": "You are Granite, developed by IBM. You are a helpful AI assistant. Respond to every user query in a comprehensive and detailed way. You can write down your thoughts and reasoning process before responding. In the thought process, engage in a comprehensive cycle of analysis, summarization, exploration, reassessment, reflection, backtracing, and iteration to develop well-considered thinking process. In the response section, based on various attempts, explorations, and reflections from the thoughts section, systematically present the final solution that you deem correct. The response should summarize the thought process. Write your thoughts after 'Here is my thought process:' and write your response after 'Here is my response:' for each user query.",
+      "schema": "<|start_of_role|>system<|end_of_role|>{system}<|end_of_text|>"
+    },
+    "user": "<|start_of_role|>user<|end_of_role|>{prompt}<|end_of_text|>"
+  },
+  "granite-tools": {
+    "afterShot": "<|end_of_text|>\n",
+    "assistant": "<|start_of_role|>assistant<|end_of_role|>",
+    "id": "granite-tools",
+    "linebreaks": {
+      "system": 1,
+      "tools": 1,
+      "user": 1
+    },
+    "name": "Granite tools",
+    "stop": [
+      "<|end_of_text|>",
+      "<|start_of_role|>"
+    ],
+    "system": {
+      "message": "You are Granite, developed by IBM. You are a helpful AI assistant with access to the following tools. When a tool is required to answer the user's query, respond with <|tool_call|> followed by a JSON list of tools used. If a tool does not exist in the provided list of tools, notify the user that you do not have the ability to fulfill the request.",
+      "schema": "<|start_of_role|>system<|end_of_role|>{system}<|end_of_text|>"
+    },
+    "tools": {
+      "call": "<|tool_call|>{tool}",
+      "def": "<|start_of_role|>tools<|end_of_role|>{tools}<|end_of_text|>",
+      "response": "<|start_of_role|>tool_response<|end_of_role|>{tools_response}<|end_of_text|>\n"
+    },
+    "user": "<|start_of_role|>user<|end_of_role|>{prompt}<|end_of_text|>"
   },
   "llama": {
     "assistant": " [/INST] ",
@@ -217,6 +294,24 @@ var templates = `{
     },
     "user": "[INST]{prompt}"
   },
+  "mistral-system-tools": {
+    "afterShot": "\n",
+    "assistant": "",
+    "id": "mistral-system",
+    "name": "Mistral system",
+    "stop": [
+      "</s>"
+    ],
+    "system": {
+      "schema": "[SYSTEM_PROMPT]{system_prompt}[/SYSTEM_PROMPT]"
+    },
+    "tools": {
+      "call": "[TOOL_CALLS] [{tool}]</s>",
+      "def": "[AVAILABLE_TOOLS]{tools}[/AVAILABLE_TOOLS]",
+      "response": "[TOOL_RESULTS]{tools_response}[/TOOL_RESULTS]"
+    },
+    "user": "[INST]{prompt}[/INST]"
+  },
   "nemotron": {
     "afterShot": "\n\n",
     "assistant": "<extra_id_1>Assistant",
@@ -237,20 +332,6 @@ var templates = `{
     "name": "No template",
     "user": "{prompt}"
   },
-  "octopus": {
-    "afterShot": "\n",
-    "assistant": "<|assistant|>",
-    "id": "octopus",
-    "name": "Octopus",
-    "stop": [
-      "<|end|>"
-    ],
-    "system": {
-      "message": "You are a router. Below is the query from the users, please call the correct function and generate the parameters to call the function.",
-      "schema": "<|system|>{system}<|end|>"
-    },
-    "user": "<|user|>{prompt}<|end|>"
-  },
   "openchat": {
     "assistant": "GPT4 Assistant:",
     "id": "openchat",
@@ -268,19 +349,6 @@ var templates = `{
       "<|end_of_turn|>"
     ],
     "user": "GPT4 Correct User: {prompt}<|end_of_turn|>"
-  },
-  "opencodeinterpreter": {
-    "assistant": "<|Assistant|>",
-    "id": "opencodeinterpreter",
-    "linebreaks": {
-      "user": 2
-    },
-    "name": "Open code interpreter",
-    "stop": [
-      "<|EOT|>",
-      "<|User|>"
-    ],
-    "user": "<|User|>\n{prompt}"
   },
   "orca": {
     "assistant": "### Response:",

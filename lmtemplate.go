@@ -10,26 +10,39 @@ var Templates map[string]LmTemplate
 
 func init() {
 	var err error
-	//tpl := make(map[string]interface{})
 	err = json.Unmarshal([]byte(templates), &Templates)
 	if err != nil {
-		fmt.Println("Error unmarshalling templates:", err)
-		return
+		panic(fmt.Sprintf("Error unmarshalling templates: %v", err))
 	}
-	//fmt.Println("TPL", Templates)
-
-	// Debug: Print the Templates map to verify its contents
-	/*for _, value := range Templates {
-		fmt.Printf("Template ID: %s, Name: %s\n", value.ID, value.Name)
-	}*/
 }
 
 func InitTemplate(name string) (LmTemplate, error) {
 	tpl, ok := Templates[name]
 	if !ok {
-		return LmTemplate{}, fmt.Errorf("No template named " + name)
+		return LmTemplate{}, fmt.Errorf("No template named %s", name)
 	}
 	return tpl, nil
+}
+
+func NewPromptTemplate(name string) (*PromptTemplate, error) {
+	tmpl, err := InitTemplate(name)
+	if err != nil {
+		return nil, err
+	}
+	pt := &PromptTemplate{
+		ID:         tmpl.ID,
+		Name:       tmpl.Name,
+		User:       tmpl.User,
+		Assistant:  tmpl.Assistant,
+		System:     tmpl.System,
+		Shots:      tmpl.Shots,
+		Stop:       tmpl.Stop,
+		Linebreaks: tmpl.Linebreaks,
+		AfterShot:  tmpl.AfterShot,
+		Prefix:     tmpl.Prefix,
+		ToolsDef:   tmpl.ToolsDef, // Copy ToolsDef
+	}
+	return pt, nil
 }
 
 func (tpl *PromptTemplate) ReplaceSystem(msg string) *PromptTemplate {
@@ -52,6 +65,11 @@ func (tpl *PromptTemplate) ReplacePrompt(msg string) *PromptTemplate {
 	return tpl
 }
 
+func (tpl *PromptTemplate) AddTool(tool map[string]interface{}) *PromptTemplate {
+	tpl.Tools = append(tpl.Tools, tool)
+	return tpl
+}
+
 func (tpl *PromptTemplate) AddShot(user string, assistant string) *PromptTemplate {
 	tpl.Shots = append(tpl.Shots, TurnBlock{User: user, Assistant: assistant})
 	return tpl
@@ -64,8 +82,15 @@ func (tpl *PromptTemplate) AddShots(shots []TurnBlock) *PromptTemplate {
 
 func (tpl *PromptTemplate) RenderShot(shot TurnBlock) string {
 	var buf []string
-	buf = append(buf, tpl._buildUserBlock(&shot.User))
-	buf = append(buf, tpl._buildAssistantBlock(&shot.Assistant, true))
+	buf = append(buf, tpl.buildUserBlock(&shot.User))
+	buf = append(buf, tpl.buildAssistantBlock(&shot.Assistant, true))
+
+	if shot.Tool != "" && tpl.ToolsDef != nil {
+		toolCall := tpl.RenderToolCall(shot.Tool)
+		toolResponse := strings.Replace(tpl.ToolsDef.Response, "{tools_response}", shot.Tool, 1)
+		buf = append(buf, toolCall, toolResponse)
+	}
+
 	if tpl.AfterShot != nil {
 		buf = append(buf, *tpl.AfterShot)
 	}
@@ -75,15 +100,13 @@ func (tpl *PromptTemplate) RenderShot(shot TurnBlock) string {
 func (tpl *PromptTemplate) Render(skipEmptySystem bool) string {
 	var res string
 	if tpl.System != nil {
-		res = tpl._buildSystemBlock(skipEmptySystem)
+		res = tpl.buildSystemBlock(skipEmptySystem)
 	}
 	for _, shot := range tpl.Shots {
 		res += tpl.RenderShot(shot)
 	}
-	//if len(tpl.Shots) == 0 {
-	res += tpl._buildUserBlock(nil)
-	res += tpl._buildAssistantBlock(nil, false)
-	//}
+	res += tpl.buildUserBlock(nil)
+	res += tpl.buildAssistantBlock(nil, false)
 	return res
 }
 
@@ -94,11 +117,15 @@ func (tpl *PromptTemplate) Prompt(msg string) string {
 }
 
 func (tpl *PromptTemplate) PushToHistory(turn HistoryTurn) *PromptTemplate {
-	tpl.history = append(tpl.history, turn)
+	tpl.Shots = append(tpl.Shots, TurnBlock{
+		User:      turn.User,
+		Assistant: turn.Assistant,
+		Tool:      turn.Tool,
+	})
 	return tpl
 }
 
-func (tpl *PromptTemplate) _buildSystemBlock(skipEmptySystem bool) string {
+func (tpl *PromptTemplate) buildSystemBlock(skipEmptySystem bool) string {
 	var res string
 	if tpl.System != nil {
 		res = tpl.System.Schema
@@ -113,13 +140,17 @@ func (tpl *PromptTemplate) _buildSystemBlock(skipEmptySystem bool) string {
 		if tpl.Linebreaks != nil && tpl.Linebreaks.System != nil {
 			res += strings.Repeat("\n", *tpl.Linebreaks.System)
 		}
+		if strings.Contains(res, "{tools}") && tpl.ToolsDef != nil {
+			toolsBlock := tpl.buildToolsBlock()
+			res = strings.Replace(res, "{tools}", toolsBlock, 1)
+		}
 	} else if !skipEmptySystem {
 		res = tpl.System.Schema
 	}
 	return res
 }
 
-func (tpl *PromptTemplate) _buildUserBlock(msg *string) string {
+func (tpl *PromptTemplate) buildUserBlock(msg *string) string {
 	var buf []string
 	userBlock := tpl.User
 	if tpl._replacePrompt != "" {
@@ -135,7 +166,7 @@ func (tpl *PromptTemplate) _buildUserBlock(msg *string) string {
 	return strings.Join(buf, "")
 }
 
-func (tpl *PromptTemplate) _buildAssistantBlock(msg *string, isShot bool) string {
+func (tpl *PromptTemplate) buildAssistantBlock(msg *string, isShot bool) string {
 	var buf []string
 	assistantBlock := tpl.Assistant
 	buf = append(buf, assistantBlock)
@@ -151,10 +182,18 @@ func (tpl *PromptTemplate) _buildAssistantBlock(msg *string, isShot bool) string
 	return strings.Join(buf, "")
 }
 
-/*func (tpl *PromptTemplate) _load(name string) (LmTemplate, error) {
-	template, exists := templates[name]
-	if !exists {
-		return LmTemplate{}, errors.New(fmt.Sprintf("Template %s not found", name))
+func (tpl *PromptTemplate) buildToolsBlock() string {
+	if tpl.ToolsDef == nil || len(tpl.Tools) == 0 {
+		return ""
 	}
-	return template, nil
-}*/
+	toolsJSON, _ := json.Marshal(tpl.Tools)
+	return strings.Replace(tpl.ToolsDef.Def, "{tools}", string(toolsJSON), 1)
+}
+
+// New method to handle tool calls
+func (tpl *PromptTemplate) RenderToolCall(toolName string) string {
+	if tpl.ToolsDef == nil || tpl.ToolsDef.Call == "" {
+		return ""
+	}
+	return strings.Replace(tpl.ToolsDef.Call, "{tool}", toolName, 1)
+}

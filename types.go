@@ -14,19 +14,27 @@ type PromptBlock struct {
 type TurnBlock struct {
 	User      string `json:"user"`
 	Assistant string `json:"assistant"`
+	Tool      string `json:"tool,omitempty"`
+}
+
+type ToolDefinition struct {
+	Def      string `json:"def,omitempty"`
+	Call     string `json:"call,omitempty"`
+	Response string `json:"response,omitempty"`
 }
 
 type LmTemplate struct {
-	ID         string        `json:"id"`
-	Name       string        `json:"name"`
-	User       string        `json:"user"`
-	Assistant  string        `json:"assistant"`
-	System     *PromptBlock  `json:"system,omitempty"`
-	Shots      []TurnBlock   `json:"shots,omitempty"`
-	Stop       []string      `json:"stop,omitempty"`
-	Linebreaks *SpacingSlots `json:"linebreaks,omitempty"`
-	AfterShot  *string       `json:"afterShot,omitempty"`
-	Prefix     *string       `json:"prefix,omitempty"`
+	ID         string          `json:"id"`
+	Name       string          `json:"name"`
+	User       string          `json:"user"`
+	Assistant  string          `json:"assistant"`
+	System     *PromptBlock    `json:"system,omitempty"`
+	Shots      []TurnBlock     `json:"shots,omitempty"`
+	Stop       []string        `json:"stop,omitempty"`
+	Linebreaks *SpacingSlots   `json:"linebreaks,omitempty"`
+	AfterShot  *string         `json:"afterShot,omitempty"`
+	Prefix     *string         `json:"prefix,omitempty"`
+	ToolsDef   *ToolDefinition `json:"tools,omitempty"` // New field
 }
 
 type PromptTemplate struct {
@@ -45,6 +53,8 @@ type PromptTemplate struct {
 	_extraAssistant string
 	_replacePrompt  string
 	history         []HistoryTurn
+	Tools           []map[string]interface{} `json:"tools,omitempty"`     // New field
+	ToolsDef        *ToolDefinition          `json:"tools_def,omitempty"` // New field
 }
 
 type ImgData struct {
@@ -55,5 +65,6 @@ type ImgData struct {
 type HistoryTurn struct {
 	User      string    `json:"user"`
 	Assistant string    `json:"assistant"`
+	Tool      string    `json:"tool,omitempty"`
 	Images    []ImgData `json:"images,omitempty"`
 }
