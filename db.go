@@ -18,7 +18,7 @@ var templates = `{
     "user": "### Instruction:\n{prompt}"
   },
   "chatml": {
-    "afterShot": " <|im_end|>\n",
+    "afterShot": "<|im_end|>",
     "assistant": "<|im_start|>assistant",
     "id": "chatml",
     "linebreaks": {
@@ -36,7 +36,7 @@ var templates = `{
     "user": "<|im_start|>user\n{prompt}<|im_end|>"
   },
   "chatml-tools": {
-    "afterShot": " <|im_end|>\n",
+    "afterShot": "<|im_end|>",
     "assistant": "<|im_start|>assistant",
     "id": "chatml",
     "linebreaks": {
@@ -49,13 +49,13 @@ var templates = `{
       "<|im_end|>"
     ],
     "system": {
-      "message": "You are a helpful assistant with tool calling capabilities. You may call one or more functions to assist with the user query.\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\\n{tools}\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\\n</tool_call>",
+      "message": "You are a helpful assistant with tool calling capabilities. You may call one or more functions to assist with the user query.\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{tools}\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n[{\"name\": <function-name>, \"arguments\": <args-json-object>}]\n</tool_call>",
       "schema": "<|im_start|>system\n{system}<|im_end|>"
     },
     "tools": {
-      "call": "<tool_call>\n{tool}\n</tool_call>",
+      "call": "<tool_call>\n{tools}\n</tool_call>",
       "def": "{system}",
-      "response": "<|im_start|>user\n<tool_response>\n{tools_response}\n</tool_response><|im_end|>\n"
+      "response": "<|im_start|>user\n<tool_response>\n{tools_response}\n</tool_response><|im_end|>"
     },
     "user": "<|im_start|>user\n{prompt}<|im_end|>"
   },
@@ -90,6 +90,26 @@ var templates = `{
       "schema": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>{system}<|END_OF_TURN_TOKEN|>"
     },
     "user": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>{prompt}<|END_OF_TURN_TOKEN|>"
+  },
+  "deephermes": {
+    "afterShot": "<|eot_id|>",
+    "assistant": "<|start_header_id|>assistant<|end_header_id|>",
+    "id": "deephermes",
+    "name": "Deephermes",
+    "stop": [
+      "<|eot_id|>",
+      "<|end_of_text|>"
+    ],
+    "system": {
+      "message": "You are a function calling AI model. You are provided with function signatures within <tools></tools> XML tags. You may call one or more functions to assist with the user query. Don't make assumptions about what values to plug into functions. Here are the available tools: <tools> {tools} </tools>. For each function call return a json object with function name and arguments within <tool_call></tool_call> XML tags as follows:\n<tool_call>\n[{\"arguments\": <args-dict>, \"name\": <function-name>}]\n</tool_call>",
+      "schema": "<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
+    },
+    "tools": {
+      "call": "<tool_call>\n{tools}\n</tool_call>",
+      "def": "{system}",
+      "response": "<|start_header_id|>user<|end_header_id|>\n<tool_response>\n{tools_response}\n</tool_response><|eot_id|>"
+    },
+    "user": "<|start_header_id|>user<|end_header_id|>\n{prompt}<|eot_id|>"
   },
   "deepseek": {
     "afterShot": "\n",
@@ -145,18 +165,36 @@ var templates = `{
     },
     "user": "<｜User｜>{prompt}"
   },
+  "exaone": {
+    "afterShot": "[|endofturn|]",
+    "assistant": "[|assistant|]",
+    "id": "exaone",
+    "linebreaks": {
+      "system": 1,
+      "user": 1
+    },
+    "name": "Exaone",
+    "stop": [
+      "[|endofturn|]"
+    ],
+    "system": {
+      "message": "You are EXAONE model from LG AI Research, a helpful assistant.",
+      "schema": "[|system|]{system}[|endofturn|]"
+    },
+    "user": "[|user|]{prompt}[|endofturn|]"
+  },
   "gemma": {
-    "afterShot": "\n",
-    "assistant": "<end_of_turn>\n<start_of_turn>model",
+    "afterShot": "<end_of_turn>",
+    "assistant": "<start_of_turn>model",
     "id": "gemma",
     "name": "Gemma",
     "stop": [
       "<end_of_turn>"
     ],
-    "user": "<start_of_turn>user\n{prompt}"
+    "user": "<start_of_turn>user\n{prompt}\n <end_of_turn>"
   },
   "granite": {
-    "afterShot": "<|end_of_text|>\n",
+    "afterShot": "<|end_of_text|>",
     "assistant": "<|start_of_role|>assistant<|end_of_role|>",
     "id": "granite",
     "linebreaks": {
@@ -175,7 +213,7 @@ var templates = `{
     "user": "<|start_of_role|>user<|end_of_role|>{prompt}<|end_of_text|>"
   },
   "granite-think": {
-    "afterShot": "<|end_of_text|>\n",
+    "afterShot": "<|end_of_text|>",
     "assistant": "<|start_of_role|>assistant<|end_of_role|>",
     "id": "granite-think",
     "linebreaks": {
@@ -194,7 +232,7 @@ var templates = `{
     "user": "<|start_of_role|>user<|end_of_role|>{prompt}<|end_of_text|>"
   },
   "granite-tools": {
-    "afterShot": "<|end_of_text|>\n",
+    "afterShot": "<|end_of_text|>",
     "assistant": "<|start_of_role|>assistant<|end_of_role|>",
     "id": "granite-tools",
     "linebreaks": {
@@ -212,7 +250,7 @@ var templates = `{
       "schema": "<|start_of_role|>system<|end_of_role|>{system}<|end_of_text|>"
     },
     "tools": {
-      "call": "<|tool_call|>{tool}",
+      "call": "<tool_call>{tools}",
       "def": "<|start_of_role|>tools<|end_of_role|>{tools}<|end_of_text|>",
       "response": "<|start_of_role|>tool_response<|end_of_role|>{tools_response}<|end_of_text|>\n"
     },
@@ -246,6 +284,21 @@ var templates = `{
       "<|end_of_text|>"
     ],
     "system": {
+      "schema": "<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
+    },
+    "user": "<|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|>"
+  },
+  "llama3-think": {
+    "afterShot": "<|eot_id|>",
+    "assistant": "<|start_header_id|>assistant<|end_header_id|>",
+    "id": "llama3",
+    "name": "Llama 3",
+    "stop": [
+      "<|eot_id|>",
+      "<|end_of_text|>"
+    ],
+    "system": {
+      "message": "You are a deep thinking AI, you may use extremely long chains of thought to deeply consider the problem and deliberate with yourself via systematic reasoning processes to help come to a correct solution prior to answering. You should enclose your thoughts and internal monologue inside <think> </think> tags, and then provide your solution or response to the problem.",
       "schema": "<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
     },
     "user": "<|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|>"
@@ -306,7 +359,7 @@ var templates = `{
       "schema": "[SYSTEM_PROMPT]{system_prompt}[/SYSTEM_PROMPT]"
     },
     "tools": {
-      "call": "[TOOL_CALLS] [{tool}]</s>",
+      "call": "[TOOL_CALLS]{tools}",
       "def": "[AVAILABLE_TOOLS]{tools}[/AVAILABLE_TOOLS]",
       "response": "[TOOL_RESULTS]{tools_response}[/TOOL_RESULTS]"
     },
@@ -365,7 +418,7 @@ var templates = `{
     "user": "### User:\n{prompt}"
   },
   "phi3": {
-    "afterShot": "<|end|>\n",
+    "afterShot": "<|end|>",
     "assistant": "<|assistant|>",
     "id": "phi3",
     "name": "Phi 3",
@@ -379,7 +432,7 @@ var templates = `{
     "user": "<|user|> {prompt}<|end|>"
   },
   "phi4": {
-    "afterShot": "<|im_end|>\n",
+    "afterShot": "<|im_end|>",
     "assistant": "<|im_start|>assistant<|im_sep|>",
     "id": "phi4",
     "name": "Phi 4",
@@ -391,6 +444,17 @@ var templates = `{
       "schema": "<|im_start|>system<|im_sep|>{system}<|im_end|>"
     },
     "user": "<|im_start|>user<|im_sep|>{prompt}<|im_end|>"
+  },
+  "reka": {
+    "afterShot": " <sep> ",
+    "assistant": "assistant:",
+    "id": "reka",
+    "name": "Reka",
+    "stop": [
+      "<sep>",
+      "<|endoftext|>"
+    ],
+    "user": "human: {prompt} <sep> "
   },
   "vicuna": {
     "assistant": "### ASSISTANT:",
